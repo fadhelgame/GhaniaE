@@ -27,35 +27,51 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { items, shippingName, shippingPhone, shippingAddress, total } = body;
+    const { items, shippingName, shippingPhone, shippingAddress } = body;
 
     if (!items?.length || !shippingName || !shippingPhone || !shippingAddress) {
       return NextResponse.json({ error: "Data tidak lengkap" }, { status: 400 });
     }
 
-    // Validate stock
+    // Validate stock AND fetch real prices from DB (never trust client price)
+    const validatedItems: { productId: string; quantity: number; price: number; name: string }[] = [];
+    let serverTotal = 0;
+
     for (const item of items) {
       const product = await prisma.product.findUnique({
         where: { id: item.productId },
       });
-      if (!product || product.stock < item.quantity) {
+      if (!product || !product.isActive) {
         return NextResponse.json(
-          { error: `Stok ${product?.name || "produk"} tidak mencukupi` },
+          { error: `Produk tidak ditemukan` },
           { status: 400 }
         );
       }
+      if (product.stock < item.quantity) {
+        return NextResponse.json(
+          { error: `Stok ${product.name} tidak mencukupi` },
+          { status: 400 }
+        );
+      }
+      validatedItems.push({
+        productId: product.id,
+        quantity: item.quantity,
+        price: product.price, // use DB price, ignore client price
+        name: product.name,
+      });
+      serverTotal += product.price * item.quantity;
     }
 
-    // Create order
+    // Create order using server-calculated total
     const order = await prisma.order.create({
       data: {
         userId: session.user.id!,
-        total,
+        total: serverTotal,
         shippingName,
         shippingPhone,
         shippingAddress,
         items: {
-          create: items.map((item: { productId: string; quantity: number; price: number }) => ({
+          create: validatedItems.map((item) => ({
             productId: item.productId,
             quantity: item.quantity,
             price: item.price,
@@ -65,7 +81,7 @@ export async function POST(req: NextRequest) {
     });
 
     // Decrease stock
-    for (const item of items) {
+    for (const item of validatedItems) {
       await prisma.product.update({
         where: { id: item.productId },
         data: { stock: { decrement: item.quantity } },
@@ -84,18 +100,18 @@ export async function POST(req: NextRequest) {
       const parameter = {
         transaction_details: {
           order_id: order.id,
-          gross_amount: Math.round(total),
+          gross_amount: Math.round(serverTotal),
         },
         customer_details: {
           first_name: shippingName,
           phone: shippingPhone,
           shipping_address: { address: shippingAddress },
         },
-        item_details: items.map((item: { productId: string; quantity: number; price: number }) => ({
+        item_details: validatedItems.map((item) => ({
           id: item.productId,
           price: Math.round(item.price),
           quantity: item.quantity,
-          name: item.productId,
+          name: item.name,
         })),
       };
 

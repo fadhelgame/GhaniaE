@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { LayoutDashboard, Package, ShoppingBag, Tag, Users } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingBag, Tag, Users, Mail } from "lucide-react";
 
 export default async function AdminLayout({
   children,
@@ -19,6 +19,7 @@ export default async function AdminLayout({
     { href: "/admin/categories", icon: Tag, label: "Categories" },
     { href: "/admin/orders", icon: ShoppingBag, label: "Orders" },
     { href: "/admin/users", icon: Users, label: "Users" },
+    { href: "/admin/messages", icon: Mail, label: "Inbox" },
   ];
 
   return (

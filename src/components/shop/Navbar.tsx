@@ -3,8 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCartStore } from "@/store/cart";
-import { ShoppingBag, User, Menu, X, Search } from "lucide-react";
+import { useLanguageStore } from "@/store/language";
+import { useT } from "@/hooks/useT";
+import { translations } from "@/lib/translations";
+import { ShoppingBag, Menu, X, Search } from "lucide-react";
 import { useState, useEffect } from "react";
+import { signOut } from "next-auth/react";
+import LoginModal from "@/components/shop/LoginModal";
 
 interface NavbarProps {
   user?: { name?: string | null; email?: string | null; role?: string } | null;
@@ -14,8 +19,12 @@ export default function Navbar({ user }: NavbarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false);
   const itemCount = useCartStore((s) => s.itemCount());
   const pathname = usePathname();
+  const { lang, setLang } = useLanguageStore();
+  const { t } = useT();
+  const nav = translations.nav;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -24,8 +33,11 @@ export default function Navbar({ user }: NavbarProps) {
   }, []);
 
   const navLinks = [
-    { href: "/products", label: "Products" },
-    { href: "/categories", label: "Categories" },
+    { href: "/products",      label: t(nav.products) },
+    { href: "/categories",    label: t(nav.categories) },
+    { href: "/temukan-kami",  label: t(nav.findUs) },
+    { href: "/about",         label: t(nav.about) },
+    { href: "/contact",       label: t(nav.contact) },
   ];
 
   return (
@@ -52,8 +64,8 @@ export default function Navbar({ user }: NavbarProps) {
             </span>
           </Link>
 
-          {/* Desktop Nav — centered */}
-          <div className="hidden md:flex items-center gap-10">
+          {/* Desktop Nav */}
+          <div className="hidden md:flex items-center gap-8">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
@@ -67,9 +79,7 @@ export default function Navbar({ user }: NavbarProps) {
                 {link.label}
                 <span
                   className={`absolute -bottom-0.5 left-0 h-px bg-[#5BA8A0] transition-all duration-300 ${
-                    pathname.startsWith(link.href)
-                      ? "w-full"
-                      : "w-0 group-hover:w-full"
+                    pathname.startsWith(link.href) ? "w-full" : "w-0 group-hover:w-full"
                   }`}
                 />
               </Link>
@@ -78,6 +88,31 @@ export default function Navbar({ user }: NavbarProps) {
 
           {/* Actions */}
           <div className="flex items-center gap-1">
+
+            {/* Language switcher */}
+            <div className="flex items-center bg-[#F0F8F7] rounded-full border border-[#D8ECEB] p-0.5 mr-1">
+              <button
+                onClick={() => setLang("id")}
+                className={`px-2.5 py-1 rounded-full text-xs font-semibold transition-all duration-200 ${
+                  lang === "id"
+                    ? "bg-[#5BA8A0] text-white shadow-sm"
+                    : "text-[#8AA8A5] hover:text-[#5BA8A0]"
+                }`}
+              >
+                ID
+              </button>
+              <button
+                onClick={() => setLang("en")}
+                className={`px-2.5 py-1 rounded-full text-xs font-semibold transition-all duration-200 ${
+                  lang === "en"
+                    ? "bg-[#5BA8A0] text-white shadow-sm"
+                    : "text-[#8AA8A5] hover:text-[#5BA8A0]"
+                }`}
+              >
+                EN
+              </button>
+            </div>
+
             <Link
               href="/search"
               className="p-2.5 text-[#4A6663] hover:text-[#1A2B2A] hover:bg-[#E4F2F0] rounded-full transition-all duration-200"
@@ -113,16 +148,13 @@ export default function Navbar({ user }: NavbarProps) {
 
                 {userMenuOpen && (
                   <>
-                    <div
-                      className="fixed inset-0 z-10"
-                      onClick={() => setUserMenuOpen(false)}
-                    />
+                    <div className="fixed inset-0 z-10" onClick={() => setUserMenuOpen(false)} />
                     <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-2xl shadow-lg border border-[#D8ECEB] py-2 z-20">
                       {[
-                        { href: "/profile", label: "My Profile" },
-                        { href: "/orders", label: "My Orders" },
+                        { href: "/profile", label: t(nav.myProfile) },
+                        { href: "/orders",  label: t(nav.myOrders) },
                         ...(user.role === "ADMIN"
-                          ? [{ href: "/admin", label: "Admin Panel" }]
+                          ? [{ href: "/admin", label: t(nav.adminPanel) }]
                           : []),
                       ].map((item) => (
                         <Link
@@ -135,25 +167,23 @@ export default function Navbar({ user }: NavbarProps) {
                         </Link>
                       ))}
                       <hr className="my-1.5 border-[#E4F2F0]" />
-                      <form action="/api/auth/signout" method="POST">
-                        <button
-                          type="submit"
-                          className="w-full text-left px-4 py-2.5 text-sm text-red-400 hover:bg-red-50 transition-colors"
-                        >
-                          Sign Out
-                        </button>
-                      </form>
+                      <button
+                        onClick={() => signOut({ callbackUrl: "/" })}
+                        className="w-full text-left px-4 py-2.5 text-sm text-red-400 hover:bg-red-50 transition-colors"
+                      >
+                        {t(nav.signOut)}
+                      </button>
                     </div>
                   </>
                 )}
               </div>
             ) : (
-              <Link
-                href="/login"
+              <button
+                onClick={() => setLoginOpen(true)}
                 className="ml-1 bg-[#1A2B2A] hover:bg-[#5BA8A0] text-white text-sm px-5 py-2.5 rounded-full font-medium transition-all duration-300 tracking-wide"
               >
-                Sign In
-              </Link>
+                {t(nav.signIn)}
+              </button>
             )}
 
             {/* Mobile toggle */}
@@ -179,9 +209,19 @@ export default function Navbar({ user }: NavbarProps) {
                 {link.label}
               </Link>
             ))}
+            {!user && (
+              <button
+                onClick={() => { setMenuOpen(false); setLoginOpen(true); }}
+                className="block w-full text-left py-2.5 px-2 text-sm font-medium text-[#5BA8A0]"
+              >
+                {t(nav.signIn)}
+              </button>
+            )}
           </div>
         )}
       </div>
+
+      <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} />
     </nav>
   );
 }

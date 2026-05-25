@@ -8,6 +8,8 @@ import { useCartStore } from "@/store/cart";
 import { formatPrice } from "@/lib/utils";
 import { Minus, Plus, ArrowLeft, Star, ShoppingBag } from "lucide-react";
 import Button from "@/components/ui/Button";
+import { useT } from "@/hooks/useT";
+import { translations } from "@/lib/translations";
 
 interface Product {
   id: string;
@@ -34,6 +36,8 @@ export default function ProductDetailPage() {
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
   const addItem = useCartStore((s) => s.addItem);
+  const { t } = useT();
+  const pd = translations.productDetail;
 
   useEffect(() => {
     fetch(`/api/products/${params.slug}`)
@@ -72,10 +76,10 @@ export default function ProductDetailPage() {
           className="text-2xl font-bold text-[#1A2B2A] mb-2"
           style={{ fontFamily: "var(--font-playfair), Georgia, serif" }}
         >
-          Product not found
+          {t(pd.notFound)}
         </h1>
         <Link href="/products" className="text-[#5BA8A0] hover:underline text-sm">
-          Back to Products
+          {t(pd.backToProducts)}
         </Link>
       </div>
     );
@@ -110,10 +114,10 @@ export default function ProductDetailPage() {
             className="flex items-center gap-1.5 hover:text-[#5BA8A0] transition-colors"
           >
             <ArrowLeft size={13} />
-            Back
+            {t(pd.back)}
           </button>
           <span>/</span>
-          <Link href="/products" className="hover:text-[#5BA8A0]">Products</Link>
+          <Link href="/products" className="hover:text-[#5BA8A0]">{t(pd.back)}</Link>
           {product.category && (
             <>
               <span>/</span>
@@ -177,7 +181,7 @@ export default function ProductDetailPage() {
                   ))}
                 </div>
                 <span className="text-xs text-[#8AA8A5]">
-                  {avgRating.toFixed(1)} · {product.reviews?.length} reviews
+                  {avgRating.toFixed(1)} · {product.reviews?.length} {t(pd.reviews)}
                 </span>
               </div>
             )}
@@ -208,10 +212,10 @@ export default function ProductDetailPage() {
               />
               <span className="text-sm text-[#4A6663]">
                 {product.stock <= 0
-                  ? "Out of stock"
+                  ? t(pd.outOfStock)
                   : product.stock <= 5
-                  ? `Only ${product.stock} left`
-                  : `In stock (${product.stock} available)`}
+                  ? `${t(pd.onlyLeft)} ${product.stock} ${t(pd.leftSuffix)}`
+                  : `${t(pd.inStock)} (${product.stock} ${t(pd.available)})`}
               </span>
             </div>
 
@@ -219,7 +223,7 @@ export default function ProductDetailPage() {
             {product.stock > 0 && (
               <div className="flex items-center gap-4 mb-7">
                 <span className="text-xs font-medium text-[#4A6663] uppercase tracking-wider">
-                  Qty
+                  {t(pd.qty)}
                 </span>
                 <div className="flex items-center gap-2 bg-[#F7FAF9] rounded-full border border-[#D8ECEB] p-1">
                   <button
@@ -251,7 +255,7 @@ export default function ProductDetailPage() {
                 className="flex-1"
               >
                 <ShoppingBag size={15} className="mr-2" />
-                {added ? "✓ Added!" : product.stock <= 0 ? "Sold Out" : "Add to Bag"}
+                {added ? t(pd.added) : product.stock <= 0 ? t(pd.soldOut) : t(pd.addToBag)}
               </Button>
               <Button
                 variant="dark"
@@ -263,7 +267,7 @@ export default function ProductDetailPage() {
                 disabled={product.stock <= 0}
                 className="flex-1"
               >
-                Buy Now
+                {t(pd.buyNow)}
               </Button>
             </div>
           </div>
@@ -276,7 +280,7 @@ export default function ProductDetailPage() {
               className="text-2xl font-bold text-[#1A2B2A] mb-8"
               style={{ fontFamily: "var(--font-playfair), Georgia, serif" }}
             >
-              Customer Reviews
+              {t(pd.customerReviews)}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {product.reviews.map((review, i) => (
