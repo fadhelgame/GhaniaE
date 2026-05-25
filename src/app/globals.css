@@ -65,3 +65,7 @@ html {
   background: var(--teal-100);
   color: var(--ink);
 }
+
+/* Hide scrollbar utility */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }

@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { ChevronRight, ArrowRight } from "lucide-react";
+import { ChevronRight, ArrowRight, ChevronLeft } from "lucide-react";
 import { useT } from "@/hooks/useT";
 import { translations } from "@/lib/translations";
 import ProductCard from "@/components/shop/ProductCard";
+import { useRef } from "react";
 
 interface Category {
   id: string; name: string; slug: string; image?: string | null;
@@ -27,6 +28,13 @@ const CATEGORY_EMOJI: Record<string, string> = {
 export default function HomeContent({ categories, featuredProducts }: Props) {
   const { t } = useT();
   const h = translations.home;
+  const catScrollRef = useRef<HTMLDivElement>(null);
+
+  const scrollCat = (dir: "left" | "right") => {
+    const el = catScrollRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir === "right" ? 300 : -300, behavior: "smooth" });
+  };
 
   return (
     <div className="bg-[#F7FAF9]">
@@ -139,25 +147,56 @@ export default function HomeContent({ categories, featuredProducts }: Props) {
                 <ChevronRight size={15} className="group-hover:translate-x-0.5 transition-transform" />
               </Link>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-              {categories.map((cat) => (
-                <Link key={cat.id} href={`/categories/${cat.slug}`}
-                  className="group bg-white rounded-2xl border border-[#D8ECEB] hover:border-[#98CEC9] hover:shadow-md transition-all duration-300 p-5 text-center">
-                  <div className="w-12 h-12 rounded-2xl bg-[#E4F2F0] flex items-center justify-center mx-auto mb-3 group-hover:bg-[#C4E4E0] group-hover:scale-110 transition-all duration-300">
-                    <span className="text-xl text-[#5BA8A0]">
-                      {cat.image || CATEGORY_EMOJI[cat.slug] || "✦"}
-                    </span>
-                  </div>
-                  <p className="text-sm font-semibold text-[#1A2B2A] group-hover:text-[#5BA8A0] transition-colors mb-0.5"
-                    style={{ fontFamily: "var(--font-playfair), Georgia, serif" }}>
-                    {cat.name}
-                  </p>
-                  <p className="text-[10px] text-[#8AA8A5]">
-                    {cat._count.products} {t(h.items)}
-                  </p>
-                </Link>
-              ))}
+            {/* Carousel wrapper */}
+            <div className="relative group/carousel">
+              {/* Left arrow */}
+              <button
+                onClick={() => scrollCat("left")}
+                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-10 h-10 rounded-full bg-white border border-[#D8ECEB] shadow-md flex items-center justify-center text-[#4A6663] hover:text-[#5BA8A0] hover:border-[#5BA8A0] transition-all opacity-0 group-hover/carousel:opacity-100 duration-200"
+              >
+                <ChevronLeft size={18} />
+              </button>
+
+              {/* Scroll track */}
+              <div
+                ref={catScrollRef}
+                className="flex gap-4 overflow-x-auto scroll-smooth pb-2 no-scrollbar"
+                style={{ scrollSnapType: "x mandatory" }}
+              >
+                {categories.map((cat) => (
+                  <Link
+                    key={cat.id}
+                    href={`/categories/${cat.slug}`}
+                    className="group flex-shrink-0 bg-white rounded-2xl border border-[#D8ECEB] hover:border-[#98CEC9] hover:shadow-md transition-all duration-300 p-5 text-center"
+                    style={{ scrollSnapAlign: "start", width: "clamp(140px, 18vw, 200px)" }}
+                  >
+                    <div className="w-12 h-12 rounded-2xl bg-[#E4F2F0] flex items-center justify-center mx-auto mb-3 group-hover:bg-[#C4E4E0] group-hover:scale-110 transition-all duration-300">
+                      <span className="text-xl text-[#5BA8A0]">
+                        {cat.image || CATEGORY_EMOJI[cat.slug] || "✦"}
+                      </span>
+                    </div>
+                    <p
+                      className="text-sm font-semibold text-[#1A2B2A] group-hover:text-[#5BA8A0] transition-colors mb-0.5"
+                      style={{ fontFamily: "var(--font-playfair), Georgia, serif" }}
+                    >
+                      {cat.name}
+                    </p>
+                    <p className="text-[10px] text-[#8AA8A5]">
+                      {cat._count.products} {t(h.items)}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+
+              {/* Right arrow */}
+              <button
+                onClick={() => scrollCat("right")}
+                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-10 h-10 rounded-full bg-white border border-[#D8ECEB] shadow-md flex items-center justify-center text-[#4A6663] hover:text-[#5BA8A0] hover:border-[#5BA8A0] transition-all opacity-0 group-hover/carousel:opacity-100 duration-200"
+              >
+                <ChevronRight size={18} />
+              </button>
             </div>
+
           </div>
         </section>
       )}
