@@ -11,6 +11,7 @@ import { useRef } from "react";
 interface Category {
   id: string; name: string; slug: string; image?: string | null;
   _count: { products: number };
+  products?: { image: string | null }[];
 }
 interface Product {
   id: string; name: string; slug: string; price: number; stock: number;
@@ -147,53 +148,74 @@ export default function HomeContent({ categories, featuredProducts }: Props) {
                 <ChevronRight size={15} className="group-hover:translate-x-0.5 transition-transform" />
               </Link>
             </div>
-            {/* Carousel wrapper */}
-            <div className="relative group/carousel">
-              {/* Left arrow */}
+            {/* Carousel */}
+            <div className="relative">
+              {/* Arrow Left */}
               <button
                 onClick={() => scrollCat("left")}
-                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-10 h-10 rounded-full bg-white border border-[#D8ECEB] shadow-md flex items-center justify-center text-[#4A6663] hover:text-[#5BA8A0] hover:border-[#5BA8A0] transition-all opacity-0 group-hover/carousel:opacity-100 duration-200"
+                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-5 z-10 w-11 h-11 rounded-full bg-white border border-[#D8ECEB] shadow-lg flex items-center justify-center text-[#4A6663] hover:text-[#5BA8A0] hover:border-[#5BA8A0] hover:shadow-xl transition-all duration-200"
               >
-                <ChevronLeft size={18} />
+                <ChevronLeft size={20} />
               </button>
 
-              {/* Scroll track */}
+              {/* Track */}
               <div
                 ref={catScrollRef}
-                className="flex gap-4 overflow-x-auto scroll-smooth pb-2 no-scrollbar"
+                className="flex gap-5 overflow-x-auto no-scrollbar"
                 style={{ scrollSnapType: "x mandatory" }}
               >
-                {categories.map((cat) => (
-                  <Link
-                    key={cat.id}
-                    href={`/categories/${cat.slug}`}
-                    className="group flex-shrink-0 bg-white rounded-2xl border border-[#D8ECEB] hover:border-[#98CEC9] hover:shadow-md transition-all duration-300 p-5 text-center"
-                    style={{ scrollSnapAlign: "start", width: "clamp(140px, 18vw, 200px)" }}
-                  >
-                    <div className="w-12 h-12 rounded-2xl bg-[#E4F2F0] flex items-center justify-center mx-auto mb-3 group-hover:bg-[#C4E4E0] group-hover:scale-110 transition-all duration-300">
-                      <span className="text-xl text-[#5BA8A0]">
-                        {cat.image || CATEGORY_EMOJI[cat.slug] || "✦"}
-                      </span>
-                    </div>
-                    <p
-                      className="text-sm font-semibold text-[#1A2B2A] group-hover:text-[#5BA8A0] transition-colors mb-0.5"
-                      style={{ fontFamily: "var(--font-playfair), Georgia, serif" }}
+                {categories.map((cat) => {
+                  const thumb = cat.products?.[0]?.image;
+                  return (
+                    <Link
+                      key={cat.id}
+                      href={`/categories/${cat.slug}`}
+                      className="group flex-shrink-0 bg-white rounded-2xl border border-[#D8ECEB] hover:border-[#5BA8A0] hover:shadow-lg transition-all duration-300 overflow-hidden"
+                      style={{ scrollSnapAlign: "start", width: "clamp(200px, 22vw, 260px)" }}
                     >
-                      {cat.name}
-                    </p>
-                    <p className="text-[10px] text-[#8AA8A5]">
-                      {cat._count.products} {t(h.items)}
-                    </p>
-                  </Link>
-                ))}
+                      {/* Image area */}
+                      <div className="relative h-48 bg-[#E4F2F0] overflow-hidden">
+                        {thumb ? (
+                          <Image
+                            src={thumb}
+                            alt={cat.name}
+                            fill
+                            className="object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <span className="text-5xl opacity-40">
+                              {CATEGORY_EMOJI[cat.slug] || "✦"}
+                            </span>
+                          </div>
+                        )}
+                        {/* Overlay gradient */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#1A2B2A]/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      </div>
+
+                      {/* Info */}
+                      <div className="p-4">
+                        <p
+                          className="text-sm font-bold text-[#1A2B2A] group-hover:text-[#5BA8A0] transition-colors mb-0.5"
+                          style={{ fontFamily: "var(--font-playfair), Georgia, serif" }}
+                        >
+                          {cat.name}
+                        </p>
+                        <p className="text-[11px] text-[#8AA8A5]">
+                          {cat._count.products} {t(h.items)}
+                        </p>
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
 
-              {/* Right arrow */}
+              {/* Arrow Right */}
               <button
                 onClick={() => scrollCat("right")}
-                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-10 h-10 rounded-full bg-white border border-[#D8ECEB] shadow-md flex items-center justify-center text-[#4A6663] hover:text-[#5BA8A0] hover:border-[#5BA8A0] transition-all opacity-0 group-hover/carousel:opacity-100 duration-200"
+                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-5 z-10 w-11 h-11 rounded-full bg-white border border-[#D8ECEB] shadow-lg flex items-center justify-center text-[#4A6663] hover:text-[#5BA8A0] hover:border-[#5BA8A0] hover:shadow-xl transition-all duration-200"
               >
-                <ChevronRight size={18} />
+                <ChevronRight size={20} />
               </button>
             </div>
 
