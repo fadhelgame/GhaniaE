@@ -1,8 +1,11 @@
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
 
-const adapter = new PrismaLibSql({ url: "file:./dev.db" });
-const prisma = new PrismaClient({ adapter } as Parameters<typeof PrismaClient>[0]);
+const url = process.env.DATABASE_URL ?? "file:./dev.db";
+const authToken = process.env.TURSO_AUTH_TOKEN;
+const adapter = new PrismaLibSql({ url, authToken });
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const prisma = new (PrismaClient as any)({ adapter });
 
 const imageMap: Record<string, string> = {
   "facial-wash-acne":      "/products/GHANIAH FACIAL WASH ACNE.png",
